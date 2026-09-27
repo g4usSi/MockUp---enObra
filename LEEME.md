@@ -95,3 +95,9 @@ Guion sugerido para la reunión presencial, todavía no programada: validar colo
 Probado en Chromium mediante file://: 11 páginas, navegación, contenido separado, filtros, restauración por URL, favoritos, galería, validación de visita, búsqueda, selección de asunto, creación/edición/eliminación del panel, persistencia entre páginas y modificación de contacto. Sin errores JavaScript ni desbordamiento horizontal a 375, 768 y 1440 px. Se verificaron las rutas locales.
 
 Fuentes e imágenes: `assets/FUENTES.txt` y licencias OFL incluidas. Al publicar, usar URLs públicas absolutas para las imágenes Open Graph y completar el dominio real.
+
+## Refinamiento visual 2026
+
+La versión incluida en este paquete incorpora un refinamiento de presentación inspirado en principios editoriales del sector arquitectura/desarrollo, sin copiar la interfaz de Íntegro. La página de inicio ahora usa encabezado transparente sobre el hero, composición editorial, portafolio asimétrico, fotografía de mayor escala y una sección visual de cierre.
+
+El movimiento se mantiene deliberadamente ligero: el parallax solo desplaza dos imágenes mediante `transform: translate3d()` y `requestAnimationFrame`; las entradas usan `opacity` + `transform` con `IntersectionObserver`. En pantallas de 768 px o menos el parallax se desactiva, y `prefers-reduced-motion` elimina movimiento para accesibilidad. No se añadieron librerías, videos de fondo ni dependencias externas.

@@ -84,6 +84,42 @@ await new Promise(r=>setTimeout(r,650));const saved=writeStore('enobra-last-subm
 document.addEventListener('input',e=>{if(e.target.closest('.request-form')&&e.target.getAttribute('aria-invalid')==='true')validate(e.target);});
 // Global search navigates to independent pages.
 $('#search-open').onclick=()=>{closeMenu();openModal('<div class="modal-body"><p class="eyebrow">EXPLORA ENOBRA</p><h2 id="modal-title">¿Qué estás buscando?</h2><label>Buscar<input id="global-search" type="search" autofocus placeholder="Proyectos, propiedades, servicios…"></label><p id="search-status" role="status"></p><div id="search-results" class="search-results"></div></div>');function search(){const q=normalize($('#global-search').value);let count=0;$('#search-results').innerHTML=[['Servicios',D.services,s=>'servicios.html#'+encodeURIComponent(s.id)],['Proyectos',D.projects,p=>'proyecto.html?id='+encodeURIComponent(p.id)],['Propiedades',D.properties,p=>'propiedad.html?id='+encodeURIComponent(p.id)],['Noticias',D.news,n=>'noticia.html?id='+encodeURIComponent(n.id)]].map(([name,items,url])=>{const found=items.filter(x=>normalize(`${x.title} ${x.type||''} ${x.zone||''} ${x.short||''}`).includes(q));count+=found.length;return found.length?`<h3>${name}</h3>${found.map(x=>`<a class="search-result" href="${url(x)}">${escape(x.title)} <span>↗</span></a>`).join('')}`:'';}).join('');$('#search-status').textContent=count?`${count} resultados`:'Sin coincidencias.';}$('#global-search').oninput=search;search();};
-// Reveal progressive: content remains visible without IntersectionObserver.
-if('IntersectionObserver' in window&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const reveal=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');reveal.unobserve(e.target);}}),{threshold:.02});$$('main>.section').forEach(el=>{el.classList.add('js-reveal');reveal.observe(el);});}
+// Progressive reveal and lightweight parallax. Classes are added only when JS is available,
+// so the content remains fully visible if scripting is disabled.
+const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+if('IntersectionObserver' in window&&!reducedMotion.matches){
+  const targets=[...$$('.home-about-copy,.home-about-visual,.section-heading,.business-card,.project-card,.news-card,.service-detail,.principles-grid article,.contact-layout>*,.impact-content>*')];
+  targets.forEach((el,i)=>{
+    el.classList.add('reveal-item');
+    if(el.matches('.home-about-copy,.contact-layout>*:first-child'))el.classList.add('reveal-left');
+    if(el.matches('.home-about-visual,.contact-layout>*:last-child'))el.classList.add('reveal-right');
+    el.style.setProperty('--reveal-delay',`${Math.min((i%4)*55,165)}ms`);
+  });
+  const reveal=new IntersectionObserver(entries=>entries.forEach(entry=>{
+    if(entry.isIntersecting){entry.target.classList.add('is-visible');reveal.unobserve(entry.target);}
+  }),{threshold:.12,rootMargin:'0px 0px -5% 0px'});
+  targets.forEach(el=>reveal.observe(el));
+}
+
+if(!reducedMotion.matches){
+  const parallaxItems=$$('[data-parallax]');
+  let parallaxFrame=0;
+  const paintParallax=()=>{
+    parallaxFrame=0;
+    if(innerWidth<=768){parallaxItems.forEach(el=>el.style.setProperty('--parallax-y','0px'));return;}
+    const viewport=innerHeight;
+    parallaxItems.forEach(el=>{
+      const rect=el.parentElement.getBoundingClientRect();
+      if(rect.bottom<0||rect.top>viewport)return;
+      const factor=Math.max(0,Math.min(.08,Number(el.dataset.parallax)||.04));
+      const distance=(rect.top+rect.height/2-viewport/2)*factor;
+      const limited=Math.max(-42,Math.min(42,distance));
+      el.style.setProperty('--parallax-y',`${limited.toFixed(1)}px`);
+    });
+  };
+  const requestParallax=()=>{if(!parallaxFrame)parallaxFrame=requestAnimationFrame(paintParallax);};
+  addEventListener('scroll',requestParallax,{passive:true});
+  addEventListener('resize',requestParallax,{passive:true});
+  requestParallax();
+}
 })();
